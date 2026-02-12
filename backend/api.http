@@ -1,0 +1,14 @@
+###recuperarr todas las peliculas
+GET http://localhost:1234/movies/c8a7d63f-3b04-44d3-9d95-8782fd7dcfaf
+
+### recupera peliculas de genero accion y con rating de >= 8
+GET  http://localhost:1234/movies?genre=Action&rate=8
+
+### recupera peliculas de genero accion y con rating de >= 8 con un limite maximo de 3 pelis
+GET  http://localhost:1234/movies?genre=Action&rate=8&limit=2
+
+### request con limites no funcionales (me devuelve todas las busquedas para los otros filtros)
+GET  http://localhost:1234/movies?genre=Action&rate=8&limit=1.4
+
+
+
