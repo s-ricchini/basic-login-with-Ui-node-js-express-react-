@@ -1,6 +1,7 @@
 const express = require('express');
 const movies = require('./movies.json')
-
+const {movieSchema} = require('./schemas/movies.js')
+const z = require('zod')
 
 const app = express();
 app.disable('x-powered-by');
@@ -9,6 +10,7 @@ app.get('/', (req,res) => {
     res.json({name:"santi"})
 })
 
+app.use(express.json())
 
 //todos los recusos Movies se identifican como /movies
 app.get('/movies', (req,res) => {
@@ -53,6 +55,64 @@ app.get('/movies/:id',(req,res) => {
 
     }
 
+    
+})
+
+//middleware generico que procesa schemas, pueden hacer procesamiento parcial para patch
+const validateSchema = (schema, parcial = false) => {
+    return (req,res,next) => {
+        const input = req.body
+
+        let result = null;
+
+        if(parcial){
+            result = schema.partial().safeParse(input)
+        } else{
+            result = schema.safeParse(input)
+        }
+
+        if (!result.success){
+            return res.status(400).json(result.error);
+            
+        }
+
+        req.body = result.data;
+        next()
+    }
+}
+
+
+app.post('/movies',validateSchema(movieSchema),(req,res) => {
+    //si llego aca la data esta validada por el middleware
+
+    const newMovie = {
+        id: crypto.randomUUID(),
+        ...req.body
+    }
+
+    movies.push(newMovie);
+    return res.status(201).json(newMovie);    
+
+})
+
+app.patch("/movies/:id",validateSchema(movieSchema,true),(req,res) => {
+    //encuentro el index de la pelicula
+    const {id} = req.params 
+
+    const movieIndex = movies.findIndex(movie => movie.id == id)
+    if (movieIndex === -1){
+        return res.status(400).json({error: "la pelicula no fue encontrada"})
+    }
+
+    //modifico la pelicula
+    const modified = {
+        ...movies[movieIndex],
+        ...req.body
+    }
+
+    movies[movieIndex] = modified;
+
+    return res.status(202).json(modified);
     
 })
 
