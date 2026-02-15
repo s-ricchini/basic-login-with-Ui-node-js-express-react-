@@ -1,6 +1,6 @@
-const z = require('zod')
+import * as z from "zod"; 
 
-const movieSchema = z.object({
+export const movieSchema = z.object({
     title: z.string(),
     year: z.number().int().min(1900).max(2026),
     director: z.string(),
@@ -13,4 +13,3 @@ const movieSchema = z.object({
     
 })
 
-module.exports = {movieSchema}

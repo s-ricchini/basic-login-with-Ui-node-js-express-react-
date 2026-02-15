@@ -1,7 +1,7 @@
-const express = require('express');
-const movies = require('./movies.json')
-const {movieSchema} = require('./schemas/movies.js')
-const z = require('zod')
+import express, { json } from 'express';
+import movies from './movies.json' with {type: 'json'};
+import { movieSchema } from './schemas/movies.js';
+
 
 const app = express();
 app.disable('x-powered-by');
@@ -10,7 +10,7 @@ app.get('/', (req,res) => {
     res.json({name:"santi"})
 })
 
-app.use(express.json())
+app.use(json())
 
 //todos los recusos Movies se identifican como /movies
 app.get('/movies', (req,res) => {
