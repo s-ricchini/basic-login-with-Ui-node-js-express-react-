@@ -1,7 +1,7 @@
 import express, { json } from 'express';
 import movies from './movies.json' with {type: 'json'};
 import { movieSchema } from './schemas/movies.js';
-
+import { validateSchema } from './middlewares/validateSchemas.js';
 
 const app = express();
 app.disable('x-powered-by');
@@ -57,30 +57,6 @@ app.get('/movies/:id',(req,res) => {
 
     
 })
-
-//middleware generico que procesa schemas, pueden hacer procesamiento parcial para patch
-const validateSchema = (schema, parcial = false) => {
-    return (req,res,next) => {
-        const input = req.body
-
-        let result = null;
-
-        if(parcial){
-            result = schema.partial().safeParse(input)
-        } else{
-            result = schema.safeParse(input)
-        }
-
-        if (!result.success){
-            return res.status(400).json(result.error);
-            
-        }
-
-        req.body = result.data;
-        next()
-    }
-}
-
 
 app.post('/movies',validateSchema(movieSchema),(req,res) => {
     //si llego aca la data esta validada por el middleware
