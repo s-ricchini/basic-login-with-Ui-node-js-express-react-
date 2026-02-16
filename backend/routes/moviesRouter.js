@@ -5,42 +5,24 @@ import { movieSchema } from '../schemas/movies.js';
 //importo middleware para validar schemas
 import { validateSchema } from "../middlewares/validateSchemas.js";
 
-import movies from '../movies.json' with {type:'json'}
+
+import { MovieModel} from "../models/movie.js";
 
 export const moviesRouter = Router()
 
 //devuelve todos los movies y se le pueden apliar filtros (genre,rate,limit) -> OPCIONAL
-moviesRouter.get('/', (req,res) => {
+moviesRouter.get('/', async (req,res) => {
     const {genre,rate,limit} = req.query
-    let peliculasFiltradas = movies;
-
-    if (genre){
-        peliculasFiltradas = peliculasFiltradas.filter(pelicula => { return pelicula.genre.includes(genre)})
-    }
-
-    if (rate){
-        peliculasFiltradas = peliculasFiltradas.filter(pelicula => { return parseFloat(pelicula.rate) >= parseFloat(rate)})
-    }
-
-    if (limit){
-        const searchLimit = Number(limit);
-
-        if( !(Number.isNaN(searchLimit)) && Number.isInteger(searchLimit) && searchLimit > 0){
-            peliculasFiltradas = peliculasFiltradas.slice(0,searchLimit);
-        }
-    }
-
+    const peliculasFiltradas = await MovieModel.searchMovies(genre,rate,limit);
     return res.status(200).json(peliculasFiltradas)
 })
 
 
 //devuelve una movie filtrando por id
-moviesRouter.get('/:id',(req,res) => {
+moviesRouter.get('/:id', async (req,res) => {
 
     const {id} = req.params
-    const movie = movies.find(movie => {
-        return movie.id === id
-    })
+    const movie = await MovieModel.findById(id)
 
     //si se encontro la peli devuelve
     if(movie){
@@ -53,37 +35,25 @@ moviesRouter.get('/:id',(req,res) => {
 
 
 //crea una nueva pelicula primero validando el schema
-moviesRouter.post('/',validateSchema(movieSchema),(req,res) => {
+moviesRouter.post('/',validateSchema(movieSchema), async (req,res) => {
     //si llego aca la data esta validada por el middleware
-
-    const newMovie = {
-        id: crypto.randomUUID(),
-        ...req.body
-    }
-
-    movies.push(newMovie);
-    return res.status(201).json(newMovie);    
+    const params = req.body;
+    
+    const newMov = await MovieModel.newMovie(params);
+    return res.status(201).json(newMov);    
 
 })
 
 
 //modifica parametros especificos de una movie encontrada por id
-moviesRouter.patch("/:id",validateSchema(movieSchema,true),(req,res) => {
+moviesRouter.patch("/:id",validateSchema(movieSchema,true), async (req,res) => {
     //encuentro el index de la pelicula
     const {id} = req.params 
 
-    const movieIndex = movies.findIndex(movie => movie.id == id)
-    if (movieIndex === -1){
+    const modified = await MovieModel.modifyMovie(id,req.body)
+    if (!modified){
         return res.status(400).json({error: "la pelicula no fue encontrada"})
     }
-
-    //modifico la pelicula
-    const modified = {
-        ...movies[movieIndex],
-        ...req.body
-    }
-
-    movies[movieIndex] = modified;
 
     return res.status(202).json(modified);
     
